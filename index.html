@@ -1,0 +1,127 @@
+<html>
+<head>
+	<body>
+		<canvas height="400", width="500" style="background: LightBlue;"></canvas>
+	</body>
+
+	<style>
+	</style>
+
+	<script>
+		var canvas = document.querySelector("canvas");
+		var cx = canvas.getContext("2d");
+	
+		/*ball class*/
+
+		function Ball(x, y){
+			this.x = x;
+			this.y = y;
+		}
+
+		Ball.prototype.setRadius = function(radius){
+			this.radius = radius;
+		}
+		Ball.prototype.setSpeed = function(speed_x, speed_y){
+			this.speed = {x: speed_x, y: speed_y};
+		}
+		Ball.prototype.setColor = function(color){
+			this.color = color;
+		} 
+
+		ball = new Ball(canvas.width/2, 3*canvas.height/4);
+		ball.setRadius(10);
+		ball.setSpeed(2, 2);
+		ball.setColor("blue");
+
+		function drawBall(){
+			cx.beginPath();
+			// cx.arc(cx.)
+			cx.arc(ball.x, ball.y, ball.radius, 0, 10);
+			cx.fillStyle = ball.color;
+			cx.fill();
+			cx.closePath();
+		}
+		// drawBall();
+
+		function moveBall(){
+			if(ball.x >= (canvas.width-ball.radius)){
+				// right wall
+				ball.speed.x *= -1;
+			}
+			if(ball.x <= ball.radius){
+				// left wall
+				ball.speed.x *= -1;
+			}
+			if(ball.y <= ball.radius){
+				// lower wall
+				ball.speed.y *= -1;
+			}
+			if(ball.y >= (canvas.height-ball.radius)){
+			
+				// right wall
+				ball.speed.y *= -1;
+			}
+			ball.x += ball.speed.x;
+			ball.y -= ball.speed.y;
+		}
+
+		/*sprite class*/
+
+		function Sprite(height, width){
+			// 
+			this.height = height;
+			this.width = width;
+
+			this.x = canvas.width/2;
+			this.y = canvas.height-this.height/2;
+		}
+
+		Sprite.prototype.setSpeed = function(speed_x, speed_y){
+			this.speed = {x: speed_x, y: speed_y};
+		}
+
+		Sprite.prototype.setColor = function(color){
+			this.color = color;
+		}
+
+		sprite = new Sprite(15, 70);
+		sprite.setSpeed(5, 2);
+		function drawSprite(){
+			cx.beginPath();
+			cx.rect(sprite.x - sprite.width/2, sprite.y - sprite.height/2, sprite.width, sprite.height);
+			cx.fill();
+			cx.closePath();
+		}
+		// drawSprite();
+
+		function moveSprite(){
+			sprite.x += sprite.speed.x;
+			// sprite.y -= sprite.speed.y;
+
+			// right wall
+			if((sprite.x + sprite.width/2) >= canvas.width)
+				sprite.speed.x *= -1;
+
+			// left wall
+			if((sprite.x <= sprite.width/2))
+				sprite.speed.x *= -1;
+		}
+
+		function play(){
+			cx.clearRect(0, 0, canvas.width, canvas.height);
+
+			// draw
+			drawBall();
+			drawSprite();
+
+			// move
+			moveBall();
+			moveSprite();
+		}
+
+		// play();
+		setInterval(play, 10);
+		
+	</script>
+</head>
+</html>
