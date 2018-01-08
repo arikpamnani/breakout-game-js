@@ -17,7 +17,6 @@
 			this.x = x;
 			this.y = y;
 		}
-
 		Ball.prototype.setRadius = function(radius){
 			this.radius = radius;
 		}
@@ -30,7 +29,7 @@
 
 		ball = new Ball(canvas.width/2, 3*canvas.height/4);
 		ball.setRadius(10);
-		ball.setSpeed(2, 2);
+		ball.setSpeed(1, 1);
 		ball.setColor("blue");
 
 		function drawBall(){
@@ -94,17 +93,41 @@
 		}
 		// drawSprite();
 
+		var right = false;
+		var left = false; 
+
+		addEventListener("keydown", function(event){
+			if(event.keyCode == 37){
+				left = true;
+			}
+			if(event.keyCode == 39){
+				right = true;
+			}
+			// console.log(event.keyCode);
+		});
+
+		addEventListener("keyup", function(){
+			if(event.keyCode == 37){
+				left = false;
+			}
+			if(event.keyCode == 39){
+				right = false;
+			}
+		});
+
 		function moveSprite(){
-			sprite.x += sprite.speed.x;
-			// sprite.y -= sprite.speed.y;
-
-			// right wall
-			if((sprite.x + sprite.width/2) >= canvas.width)
-				sprite.speed.x *= -1;
-
-			// left wall
-			if((sprite.x <= sprite.width/2))
-				sprite.speed.x *= -1;
+			if(right){
+				if((sprite.x + sprite.width/2) >= canvas.width)
+					return;
+				else
+					sprite.x += sprite.speed.x;
+			}
+			if(left){
+				if((sprite.x <= sprite.width/2))
+					return;
+				else
+					sprite.x -= sprite.speed.x;
+			}
 		}
 
 		function play(){
@@ -119,9 +142,8 @@
 			moveSprite();
 		}
 
-		// play();
-		setInterval(play, 10);
-		
+		play();
+		setInterval(play, 5);
 	</script>
 </head>
 </html>
