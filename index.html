@@ -65,12 +65,12 @@
 
 	ball = new Ball(canvas.width/2, 3*canvas.height/4);
 	ball.setRadius(10);
-	ball.setSpeed(2, 2);
+	ball.setSpeed(6, 6);
 	ball.setColor("yellow");
 
 	function drawBall(){
 		cx.beginPath();
-		cx.arc(ball.x, ball.y, ball.radius, 0, 10);
+		cx.arc(ball.x, ball.y, ball.radius, 0, 2*Math.PI);
 		cx.fillStyle = ball.color;
 		cx.fill();
 		cx.closePath();
@@ -86,16 +86,19 @@
 			ball.speed.x *= -1;
 		}
 		if(ball.y <= ball.radius){
-			// lower wall
+			// upper wall
 			ball.speed.y *= -1;
+
+			/*???*/
+			ball.y = ball.radius;
 		}
 		if(ball.y >= (canvas.height-ball.radius-sprite.height)){
-			// right wall
+			// lower wall
 			if((ball.x >= (sprite.x - sprite.width/2)) && (ball.x <= (sprite.x + sprite.width/2)))
 				ball.speed.y *= -1;
 			else{
 				restart();
-				// all.speed = {x:0, y:0};
+				// ball.speed = {x:0, y:0};
 			}
 				
 		}
@@ -109,6 +112,7 @@
 		this.width = width;
 		this.x = x;
 		this.y = y;
+		this.onScreen = true;
 	}
 
 	Sprite.prototype.setSpeed = function(speed_x, speed_y){
@@ -119,7 +123,7 @@
 		this.color = color;
 	}
 
-	sprite = new Sprite(75, 15, canvas.width/2, canvas.height-15/2);
+	sprite = new Sprite(100, 10, canvas.width/2, canvas.height-15/2);
 	sprite.setSpeed(4, 2);
 
 	function drawSprite(){
@@ -152,12 +156,16 @@
 		// move
 		moveBall();
 		moveSprite();
+
+		// detect
+		detectCollision();
+		console.log(ball.speed);
 	}
 
 	var timer;
 
 	function autoPlay(){
-		timer = setInterval(play, 5);
+		timer = setInterval(play, 10);
 	}
 
 	function restart(){
@@ -166,7 +174,7 @@
 		/* reinitialize ball*/
 		ball.x = canvas.width/2;
 		ball.y = 3*canvas.height/4;
-		ball.setSpeed(2, 2);
+		ball.setSpeed(6, 6);
 
 		/*reinitialize sprite*/
 		sprite.x = canvas.width/2; 
@@ -197,16 +205,34 @@
 		return allBars;
 	}
 	
-	var allBars = initializeBars(10, 5);
+	var allBars = initializeBars(15, 7);
 
 	function drawBars(){
 		allBars.forEach(function(bar){
-			cx.beginPath();
-			cx.rect(bar.x, bar.y, bar.width, bar.height);
-			cx.fillStyle = bar.color;
-			cx.fill();
-			cx.closePath();
+			if(bar.onScreen){
+				cx.beginPath();
+				cx.rect(bar.x, bar.y, bar.width, bar.height);
+				cx.fillStyle = bar.color;
+				cx.fill();
+				cx.closePath();
+			}
 		});
+	}
+
+	function detectCollision(){
+		for(var i=0; i<allBars.length; i++){
+			var a = ball.x >= allBars[i].x;
+			var b = ball.y >= allBars[i].y;
+			var c = ball.x <= allBars[i].x + allBars[i].width;
+			var d = ball.y <= allBars[i].y + allBars[i].height;
+
+			if(a && b && c && d && allBars[i].onScreen){
+				// reflection
+				ball.speed.y *= -1;
+
+				allBars[i].onScreen = false;
+			}
+		}
 	}
 </script>
 </head>
