@@ -4,6 +4,17 @@
 	<canvas height="400", width="500" style="background: Black;"></canvas>
 </body>
 <script>
+	/*boilerplate code taken from - 
+	https://stackoverflow.com/questions/1484506/random-color-generator*/
+	function getRandomColor() {
+  		var letters = '0123456789ABCDEF';
+  		var color = '#';
+  		for (var i = 0; i < 6; i++) {
+    		color += letters[Math.floor(Math.random() * 16)];
+  		}
+  		return color;
+	}
+
 	/*var gameOver = false;*/
 
 	/*event listeners*/
@@ -42,12 +53,6 @@
 		this.y = y;
 	}
 
-	Ball.prototype.reInitialize = function(){
-		this.x = canvas.width/2;
-		this.y = 3*canvas.height/4;
-		this.setSpeed(2, 2);
-	}
-
 	Ball.prototype.setRadius = function(radius){
 		this.radius = radius;
 	}
@@ -65,13 +70,11 @@
 
 	function drawBall(){
 		cx.beginPath();
-		// cx.arc(cx.)
 		cx.arc(ball.x, ball.y, ball.radius, 0, 10);
 		cx.fillStyle = ball.color;
 		cx.fill();
 		cx.closePath();
 	}
-	// drawBall();
 
 	function moveBall(){
 		if(ball.x >= (canvas.width-ball.radius)){
@@ -92,7 +95,7 @@
 				ball.speed.y *= -1;
 			else{
 				restart();
-				// ball.speed = {x:0, y:0};
+				// all.speed = {x:0, y:0};
 			}
 				
 		}
@@ -101,16 +104,11 @@
 	}
 
 	/*sprite class*/
-
-	function Sprite(width, height){
-		// 
+	function Sprite(width, height, x, y){ 
 		this.height = height;
 		this.width = width;
-	}
-
-	Sprite.prototype.reInitialize = function(){
-		this.x = canvas.width/2;
-		this.y = canvas.height-this.height/2;
+		this.x = x;
+		this.y = y;
 	}
 
 	Sprite.prototype.setSpeed = function(speed_x, speed_y){
@@ -121,16 +119,15 @@
 		this.color = color;
 	}
 
-	sprite = new Sprite(75, 15);
-	sprite.reInitialize();
-	sprite.setSpeed(5, 2);
+	sprite = new Sprite(75, 15, canvas.width/2, canvas.height-15/2);
+	sprite.setSpeed(4, 2);
+
 	function drawSprite(){
 		cx.beginPath();
 		cx.rect(sprite.x - sprite.width/2, sprite.y - sprite.height/2, sprite.width, sprite.height);
 		cx.fill();
 		cx.closePath();
 	}
-	// drawSprite();
 
 	var right = false;
 	var left = false; 
@@ -141,7 +138,6 @@
 		}
 		if(left && (sprite.x > sprite.width/2)){
 			sprite.x -= sprite.speed.x;
-			// return;
 		}
 	}
 
@@ -151,6 +147,7 @@
 		// draw
 		drawBall();
 		drawSprite();
+		drawBars();
 
 		// move
 		moveBall();
@@ -165,36 +162,52 @@
 
 	function restart(){
 		clearInterval(timer);
-		ball.reInitialize();
-		sprite.reInitialize();
-		// autoPlay();
+		
+		/* reinitialize ball*/
+		ball.x = canvas.width/2;
+		ball.y = 3*canvas.height/4;
+		ball.setSpeed(2, 2);
+
+		/*reinitialize sprite*/
+		sprite.x = canvas.width/2; 
+		sprite.y = canvas.height-sprite.height/2;
+		autoPlay();
 	}
 	autoPlay();
  
 	/*var verticalDist = 10;
 	var horizontalDist = 10;*/
 
-	function initializeBars(horizontalNum, verticalNum, horizontalDist, verticalDist){
+	function initializeBars(horizontalNum, verticalNum){
+		/*array of sprite objects*/
 		var allBars = Array();
 
-		// verticalDist -> vertical dist between bars
+		var width = canvas.width / horizontalNum;
+		var height = (canvas.height/4) / verticalNum;
 		
-		var width = (canvas.width - (horizontalNum+1)*horizontalDist) / horizontalNum;
-		var height = (canvas.height/4 - (verticalNum+1)*verticalNum) / verticalNum;
-
-		var currX = verticalDist;
-		var currY = horizontalDist;
-		/*for(var i=0; i<horizontalNum; i+=1){
-			for(var j=0; j<verticalNum; j+=1){
-
+		/*outer loop -> y, inner loop -> x*/
+		for(var y=0; y<verticalNum; y+=1){
+			for(var x=0; x<horizontalNum; x+=1){
+				s = new Sprite(width, height, x*width, y*height);
+				s.setColor(getRandomColor());
+				allBars.push(s);
 			}
-		}*/
+		}
 
+		return allBars;
 	}
+	
+	var allBars = initializeBars(10, 5);
 
-	initializeBars(5, 5, 10, 10);
-
-
+	function drawBars(){
+		allBars.forEach(function(bar){
+			cx.beginPath();
+			cx.rect(bar.x, bar.y, bar.width, bar.height);
+			cx.fillStyle = bar.color;
+			cx.fill();
+			cx.closePath();
+		});
+	}
 </script>
 </head>
 </html>
