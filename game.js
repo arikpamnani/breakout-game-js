@@ -36,6 +36,8 @@ addEventListener("keydown", function(event){
 	// console.log(event.keyCode);
 });
 
+// document.body.style.backgroundImage = "url('back.jpg')";
+
 var canvas = document.querySelector("canvas");
 var cx = canvas.getContext("2d");
 
@@ -58,7 +60,7 @@ Ball.prototype.setColor = function(color){
 } 
 
 ball = new Ball(canvas.width/2, 3*canvas.height/4);
-ball.setRadius(10);
+ball.setRadius(7);
 ball.setSpeed(6, 6);
 ball.setColor("yellow");
 
@@ -168,7 +170,7 @@ function play(){
 var timer;
 
 function autoPlay(){
-	timer = setInterval(play, 10);
+	timer = setInterval(play, 12);
 }
 
 function restart(wait = false){
