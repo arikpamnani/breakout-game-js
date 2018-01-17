@@ -9,8 +9,6 @@ function getRandomColor() {
 		return color;
 }
 
-/*var gameOver = false;*/
-
 /*event listeners*/
 addEventListener("keydown", function(event){
 	if(event.keyCode == 37){
@@ -40,6 +38,8 @@ addEventListener("keydown", function(event){
 
 var canvas = document.querySelector("canvas");
 var cx = canvas.getContext("2d");
+
+var app = {lives: 3, score: 0, paused: false, gameOver: false};
 
 /*ball class*/
 function Ball(x, y){
@@ -91,10 +91,13 @@ function moveBall(){
 		if((ball.x >= (sprite.x - sprite.width/2)) && (ball.x <= (sprite.x + sprite.width/2)))
 			ball.speed.y *= -1;
 		else{
+			/* :( */
+			app.lives -= 1;
+			if(app.lives <= 0){
+				app.gameOver = true;
+			}
 			restart();
-			// ball.speed = {x:0, y:0};
 		}
-			
 	}
 	ball.x += ball.speed.x;
 	ball.y -= ball.speed.y;
@@ -153,7 +156,10 @@ function play(){
 
 	// detect
 	detectCollision();
-	console.log(ball.speed);
+
+	// score & lives
+	dispScore();
+	dispLives();
 }
 
 var timer;
@@ -164,8 +170,8 @@ function autoPlay(){
 
 function restart(){
 	clearInterval(timer);
-	
-	/* reinitialize ball*/
+
+	/*reinitialize ball*/
 	ball.x = canvas.width/2;
 	ball.y = 3*canvas.height/4;
 	ball.setSpeed(6, 6);
@@ -174,8 +180,20 @@ function restart(){
 	sprite.x = canvas.width/2; 
 	sprite.y = canvas.height-sprite.height/2;
 	autoPlay();
+
+	if(app.gameOver){
+		/*reinitialize app*/
+		app.lives = 3;
+		app.score = 0;
+		app.paused = false;
+		app.gameOver = false;
+
+		/*reinitialize bars*/
+		allBars.forEach(function(bars){
+			bars.onScreen = true;
+		});
+	}
 }
-autoPlay();
 
 /*var verticalDist = 10;
 var horizontalDist = 10;*/
@@ -199,7 +217,7 @@ function initializeBars(horizontalNum, verticalNum){
 	return allBars;
 }
 
-var allBars = initializeBars(15, 7);
+var allBars = initializeBars(17, 6);
 
 function drawBars(){
 	allBars.forEach(function(bar){
@@ -224,7 +242,49 @@ function detectCollision(){
 			// reflection
 			ball.speed.y *= -1;
 
+			// increase score
+			app.score += 1;
 			allBars[i].onScreen = false;
 		}
 	}
 }
+
+var start_button = document.querySelector("button.start");
+console.log(start_button);
+start_button.onclick = function(){
+	clearInterval(timer);
+	autoPlay();
+}
+
+var currSpeed = {x: 0, y: 0};
+var pause_button = document.querySelector("button.pause");
+pause_button.onclick = function(){
+	if(app.paused){
+		ball.speed = currSpeed;
+		app.paused = false;
+	}
+	else{
+		currSpeed = ball.speed;
+		ball.speed = {x: 0, y: 0};
+		app.paused = true;
+	}
+}
+
+var restart_button = document.querySelector("button.restart");
+restart_button.onclick = function(){
+	app.gameOver = true;
+	restart();
+}
+
+var livesDisp = document.querySelector("input.lives");
+
+function dispScore(){
+	document.querySelector("input.score").value = app.score;
+}
+
+function dispLives(){
+	document.querySelector("input.lives").value = app.lives;
+}
+
+// initialize
+play();

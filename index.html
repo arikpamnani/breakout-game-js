@@ -1,8 +1,40 @@
 <html>
 <head>
 <body>
-	<canvas height=600, width=800 style="background: Black;"></canvas>
+	<div class = "one">
+		<canvas height=600, width=800 style="background: Black;"></canvas>
+	</div>
+	<div class = "two">
+		<div style="margin-top: 2%;">
+			<label>Score</label>
+			<input type="text" class="score">
+		</div>
+		<br>
+		<div>
+			<label>Lives</label>
+			<input type="text" class="lives">
+		</div>
+		<button class="start" id="btn">Start</button>
+		<button style="margin-left: 2%;" id="btn" class="pause">Pause</button>
+		<button style="margin-left: 2%" id="btn" class="restart">Restart</button>
+		<button style="margin-left: 2%" id="btn" class="github">Github</button>
+	</div>
 </body>
 <script type="text/javascript" src="game.js"></script>
+<style>
+.one{
+	width: 70%;
+	height: 100%;
+	float: left;
+}
+.two{
+	width: 30%;
+	height: 100%;
+	float: left;
+}
+#btn{
+	margin-top: 5%;
+}
+</style>
 </head>
 </html>
