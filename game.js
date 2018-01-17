@@ -276,8 +276,6 @@ restart_button.onclick = function(){
 	restart();
 }
 
-var livesDisp = document.querySelector("input.lives");
-
 function dispScore(){
 	document.querySelector("input.score").value = app.score;
 }
