@@ -39,7 +39,7 @@ addEventListener("keydown", function(event){
 var canvas = document.querySelector("canvas");
 var cx = canvas.getContext("2d");
 
-var app = {lives: 3, score: 0, paused: false, gameOver: false};
+var app = {lives: 3, score: 0, paused: false, gameOver: false, off: true};
 
 /*ball class*/
 function Ball(x, y){
@@ -95,8 +95,11 @@ function moveBall(){
 			app.lives -= 1;
 			if(app.lives <= 0){
 				app.gameOver = true;
+				app.off = true;
+				restart(true);
 			}
-			restart();
+			else
+				restart();
 		}
 	}
 	ball.x += ball.speed.x;
@@ -168,18 +171,16 @@ function autoPlay(){
 	timer = setInterval(play, 10);
 }
 
-function restart(){
+function restart(wait = false){
 	clearInterval(timer);
 
 	/*reinitialize ball*/
 	ball.x = canvas.width/2;
 	ball.y = 3*canvas.height/4;
-	ball.setSpeed(6, 6);
 
 	/*reinitialize sprite*/
 	sprite.x = canvas.width/2; 
 	sprite.y = canvas.height-sprite.height/2;
-	autoPlay();
 
 	if(app.gameOver){
 		/*reinitialize app*/
@@ -193,6 +194,14 @@ function restart(){
 			bars.onScreen = true;
 		});
 	}
+
+	// go to initial state
+	if(wait)
+		ball.setSpeed(0, 0);
+	else
+		ball.setSpeed(6, 6);
+
+	autoPlay();
 }
 
 /*var verticalDist = 10;
@@ -252,8 +261,10 @@ function detectCollision(){
 var start_button = document.querySelector("button.start");
 console.log(start_button);
 start_button.onclick = function(){
-	clearInterval(timer);
-	autoPlay();
+	if(app.off){
+		app.off = false;
+		restart();
+	}
 }
 
 var currSpeed = {x: 0, y: 0};
@@ -262,11 +273,17 @@ pause_button.onclick = function(){
 	if(app.paused){
 		ball.speed = currSpeed;
 		app.paused = false;
+
+		// change button symbol 
+		pause_button.innerHTML = "&#9646; &#9646;";
 	}
 	else{
 		currSpeed = ball.speed;
 		ball.speed = {x: 0, y: 0};
 		app.paused = true;
+
+		// change button symbol
+		pause_button.innerHTML = "&#9658";
 	}
 }
 
