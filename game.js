@@ -61,7 +61,7 @@ Ball.prototype.setColor = function(color){
 
 ball = new Ball(canvas.width/2, 3*canvas.height/4);
 ball.setRadius(7);
-ball.setSpeed(6, 6);
+ball.setSpeed(6, -6);
 ball.setColor("yellow");
 
 function drawBall(){
@@ -105,7 +105,7 @@ function moveBall(){
 		}
 	}
 	ball.x += ball.speed.x;
-	ball.y -= ball.speed.y;
+	ball.y += ball.speed.y;
 }
 
 /*sprite class*/
@@ -201,7 +201,7 @@ function restart(wait = false){
 	if(wait)
 		ball.setSpeed(0, 0);
 	else
-		ball.setSpeed(6, 6);
+		ball.setSpeed(6, -6);
 
 	autoPlay();
 }
@@ -260,6 +260,10 @@ function detectCollision(){
 	}
 }
 
+function updateCollision(dt){
+
+}
+
 var start_button = document.querySelector("button.start");
 console.log(start_button);
 start_button.onclick = function(){
@@ -305,3 +309,63 @@ function dispLives(){
 
 // initialize
 play();
+
+// intercept functions taken from - https://github.com/jakesgordon/javascript-breakout/blob/master/game.js
+Game = {
+	Math: {
+		intercept: function(x1, y1, x2, y2, x3, y3, x4, y4, d) {
+	    	var denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
+	      	if (denom != 0) {
+	        	var ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
+		        if ((ua >= 0) && (ua <= 1)) {
+		          	var ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
+		          	if ((ub >= 0) && (ub <= 1)) {
+		            	var x = x1 + (ua * (x2-x1));
+		            	var y = y1 + (ua * (y2-y1));
+		            	return { x: x, y: y, d: d};
+		          	}
+		        }
+	      	}
+	      	return null;
+	 	},
+
+	    ballIntercept: function(ball, rect) {
+	      	var pt;
+	      	if(ball.speed.x < 0) {
+	        	pt = Game.Math.intercept(ball.x, ball.y, ball.x + ball.speed.x, ball.y + ball.speed.y, 
+	                                rect.right  + ball.radius, 
+	                                rect.top    - ball.radius, 
+	                                rect.right  + ball.radius, 
+	                                rect.bottom + ball.radius, 
+	                                "right");
+	      	}
+	      	else if(ball.speed.x > 0) {
+	        	pt = Game.Math.intercept(ball.x, ball.y, ball.x + ball.speed.x, ball.y + ball.speed.y, 
+	                                rect.left   - ball.radius, 
+	                                rect.top    - ball.radius, 
+	                                rect.left   - ball.radius, 
+	                                rect.bottom + ball.radius,
+	                                "left");
+	      	}
+	      	if(!pt) {
+	        	if(ball.speed.y < 0) {
+	          		pt = Game.Math.intercept(ball.x, ball.y, ball.x + ball.speed.x, ball.y + ball.speed.y, 
+	        	                       	rect.left   - ball.radius, 
+	                                   	rect.bottom + ball.radius, 
+	                                  	rect.right  + ball.radius, 
+	                                   	rect.bottom + ball.radius,
+	                                   	"bottom");
+	        	}
+		        else if(ny > 0) {
+		          	pt = Game.Math.intercept(ball.x, ball.y, ball.x + ball.speed.x, ball.y + ball.speed.y, 
+	                                   	rect.left   - ball.radius, 
+	                                   	rect.top    - ball.radius, 
+	                                   	rect.right  + ball.radius, 
+	                                   	rect.top    - ball.radius,
+	                                   	"top");
+		        }
+	    	}
+	      	return pt;
+	    }
+  	}
+}
