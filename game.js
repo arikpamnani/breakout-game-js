@@ -1,3 +1,67 @@
+// intercept functions taken from - https://github.com/jakesgordon/javascript-breakout/blob/master/game.js
+var Game = {
+	Math: {
+		magnitude: function(x, y) {
+  			return Math.sqrt(x*x + y*y);
+		},
+
+		intercept: function(x1, y1, x2, y2, x3, y3, x4, y4, d) {
+	    	var denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
+	      	if (denom != 0) {
+	        	var ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
+		        if ((ua >= 0) && (ua <= 1)) {
+		          	var ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
+		          	if ((ub >= 0) && (ub <= 1)) {
+		            	var x = x1 + (ua * (x2-x1));
+		            	var y = y1 + (ua * (y2-y1));
+		            	return {x: x, y: y, d: d};
+		          	}
+		        }
+	      	}
+	      	return null;
+	 	},
+
+	    ballIntercept: function(ball, rect) {
+	      	var pt;
+	      	if(ball.speed.x < 0) {
+	        	pt = Game.Math.intercept(ball.x, ball.y, ball.x + ball.speed.x, ball.y + ball.speed.y, 
+	                                rect.right  + ball.radius, 
+	                                rect.top    - ball.radius, 
+	                                rect.right  + ball.radius, 
+	                                rect.bottom + ball.radius, 
+	                                "right");
+	      	}
+	      	else if(ball.speed.x > 0) {
+	        	pt = Game.Math.intercept(ball.x, ball.y, ball.x + ball.speed.x, ball.y + ball.speed.y, 
+	                                rect.left   - ball.radius, 
+	                                rect.top    - ball.radius, 
+	                                rect.left   - ball.radius, 
+	                                rect.bottom + ball.radius,
+	                                "left");
+	      	}
+	      	if(!pt) {
+	        	if(ball.speed.y < 0) {
+	          		pt = Game.Math.intercept(ball.x, ball.y, ball.x + ball.speed.x, ball.y + ball.speed.y, 
+	        	                       	rect.left   - ball.radius, 
+	                                   	rect.bottom + ball.radius, 
+	                                  	rect.right  + ball.radius, 
+	                                   	rect.bottom + ball.radius,
+	                                   	"bottom");
+	        	}
+		        else if(ball.speed.y > 0) {
+		          	pt = Game.Math.intercept(ball.x, ball.y, ball.x + ball.speed.x, ball.y + ball.speed.y, 
+	                                   	rect.left   - ball.radius, 
+	                                   	rect.top    - ball.radius, 
+	                                   	rect.right  + ball.radius, 
+	                                   	rect.top    - ball.radius,
+	                                   	"top");
+		        }
+	    	}
+	      	return pt;
+	    }
+  	}
+};
+
 /*boilerplate code taken from - 
 https://stackoverflow.com/questions/1484506/random-color-generator*/
 function getRandomColor() {
@@ -160,7 +224,8 @@ function play(){
 	moveSprite();
 
 	// detect
-	detectCollision();
+	// detectCollision();
+	updateCollision(null);
 
 	// score & lives
 	dispScore();
@@ -261,7 +326,46 @@ function detectCollision(){
 }
 
 function updateCollision(dt){
+	var distCurrent, distClosest = Infinity, point, closest = null;
 
+	allBars.forEach(function(bar){
+		if(bar.onScreen){
+			// dummy object 
+			var item = {left: bar.x, right: bar.x + bar.width, top: bar.y, bottom: bar.y + bar.height};
+			
+			point = Game.Math.ballIntercept(ball, item);
+			if(point){
+				distCurrent = Game.Math.magnitude(point.x - ball.x, point.y = ball.y)
+
+				// check for minimum
+				if(distCurrent < distClosest){
+					distClosest = distCurrent;
+					closest = {bar: bar, point: point}
+				}
+			}
+		}
+	});
+
+	if(closest){
+		closest.bar.onScreen = false;
+
+		/*ball.x = closest.point.x, ball.y = closest.point.y;*/
+
+		switch(closest.point.d){
+			case 'left':
+			case 'right':
+				ball.speed.x *= -1;
+				break;
+			case 'bottom':
+			case 'top':
+				ball.speed.y *= -1;
+				break;
+		}
+
+		// recurse for remaining time
+		/*var udt = dt * (distClosest/Game.Math.magnitude(ball.speed.x, ball.speed.y));
+		updateCollision(udt);*/
+	}
 }
 
 var start_button = document.querySelector("button.start");
@@ -310,62 +414,3 @@ function dispLives(){
 // initialize
 play();
 
-// intercept functions taken from - https://github.com/jakesgordon/javascript-breakout/blob/master/game.js
-Game = {
-	Math: {
-		intercept: function(x1, y1, x2, y2, x3, y3, x4, y4, d) {
-	    	var denom = ((y4-y3) * (x2-x1)) - ((x4-x3) * (y2-y1));
-	      	if (denom != 0) {
-	        	var ua = (((x4-x3) * (y1-y3)) - ((y4-y3) * (x1-x3))) / denom;
-		        if ((ua >= 0) && (ua <= 1)) {
-		          	var ub = (((x2-x1) * (y1-y3)) - ((y2-y1) * (x1-x3))) / denom;
-		          	if ((ub >= 0) && (ub <= 1)) {
-		            	var x = x1 + (ua * (x2-x1));
-		            	var y = y1 + (ua * (y2-y1));
-		            	return { x: x, y: y, d: d};
-		          	}
-		        }
-	      	}
-	      	return null;
-	 	},
-
-	    ballIntercept: function(ball, rect) {
-	      	var pt;
-	      	if(ball.speed.x < 0) {
-	        	pt = Game.Math.intercept(ball.x, ball.y, ball.x + ball.speed.x, ball.y + ball.speed.y, 
-	                                rect.right  + ball.radius, 
-	                                rect.top    - ball.radius, 
-	                                rect.right  + ball.radius, 
-	                                rect.bottom + ball.radius, 
-	                                "right");
-	      	}
-	      	else if(ball.speed.x > 0) {
-	        	pt = Game.Math.intercept(ball.x, ball.y, ball.x + ball.speed.x, ball.y + ball.speed.y, 
-	                                rect.left   - ball.radius, 
-	                                rect.top    - ball.radius, 
-	                                rect.left   - ball.radius, 
-	                                rect.bottom + ball.radius,
-	                                "left");
-	      	}
-	      	if(!pt) {
-	        	if(ball.speed.y < 0) {
-	          		pt = Game.Math.intercept(ball.x, ball.y, ball.x + ball.speed.x, ball.y + ball.speed.y, 
-	        	                       	rect.left   - ball.radius, 
-	                                   	rect.bottom + ball.radius, 
-	                                  	rect.right  + ball.radius, 
-	                                   	rect.bottom + ball.radius,
-	                                   	"bottom");
-	        	}
-		        else if(ny > 0) {
-		          	pt = Game.Math.intercept(ball.x, ball.y, ball.x + ball.speed.x, ball.y + ball.speed.y, 
-	                                   	rect.left   - ball.radius, 
-	                                   	rect.top    - ball.radius, 
-	                                   	rect.right  + ball.radius, 
-	                                   	rect.top    - ball.radius,
-	                                   	"top");
-		        }
-	    	}
-	      	return pt;
-	    }
-  	}
-}
