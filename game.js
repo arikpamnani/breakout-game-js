@@ -219,13 +219,13 @@ function play(){
 	drawSprite();
 	drawBars();
 
-	// move
-	moveBall();
-	moveSprite();
-
 	// detect
 	// detectCollision();
 	updateCollision(null);
+
+	// move
+	moveBall();
+	moveSprite();
 
 	// score & lives
 	dispScore();
