@@ -1,7 +1,7 @@
 var canvas = document.querySelector("canvas");
 var cx = canvas.getContext("2d");
 
-var app = {lives: 3, score: 0, paused: false, gameOver: false, off: true};
+var app = {lives: 100, score: 0, paused: false, gameOver: false, off: true};
 
 /*ball class*/
 function Ball(x, y){
@@ -9,15 +9,19 @@ function Ball(x, y){
 	this.y = y;
 }
 
-Ball.prototype.setRadius = function(radius){
-	this.radius = radius;
+Ball.prototype = {
+	setRadius: function(radius){
+		this.radius = radius;
+	},
+
+	setSpeed: function(speed_x, speed_y){
+		this.speed = {x: speed_x, y: speed_y};
+	},
+
+	setColor: function(color){
+		this.color = color;
+	}
 }
-Ball.prototype.setSpeed = function(speed_x, speed_y){
-	this.speed = {x: speed_x, y: speed_y};
-}
-Ball.prototype.setColor = function(color){
-	this.color = color;
-} 
 
 ball = new Ball(canvas.width/2, 3*canvas.height/4);
 ball.setRadius(7);
@@ -77,13 +81,15 @@ function Sprite(width, height, x, y){
 	this.onScreen = true;
 }
 
-Sprite.prototype.setSpeed = function(speed_x, speed_y){
-	this.speed = {x: speed_x, y: speed_y};
-}
+Sprite.prototype = {
+	setSpeed: function(speed_x, speed_y){
+		this.speed = {x: speed_x, y: speed_y};
+	},
 
-Sprite.prototype.setColor = function(color){
-	this.color = color;
-}
+	setColor: function(color){
+		this.color = color;
+	}
+} 
 
 sprite = new Sprite(100, 10, canvas.width/2, canvas.height-15/2);
 sprite.setSpeed(6, 2);
@@ -107,6 +113,16 @@ function moveSprite(){
 	}
 }
 
+function amoveSprite(){
+	var action = [-1, 0, 1][Math.floor(Math.random() * 3)];
+	if(action===-1 && (sprite.x > sprite.width/2)){
+		sprite.x -= sprite.speed.x;
+	}
+	if(action===1 && (sprite.x + sprite.width/2) < canvas.width){
+		sprite.x += sprite.speed.x;
+	}
+}
+
 function play(){
 	cx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -121,7 +137,8 @@ function play(){
 
 	// move
 	moveBall();
-	moveSprite();
+	// moveSprite();
+	amoveSprite();
 
 	// score & lives
 	dispScore();
@@ -268,7 +285,6 @@ function updateCollision(dt){
 }
 
 var start_button = document.querySelector("button.start");
-console.log(start_button);
 start_button.onclick = function(){
 	if(app.off){
 		app.off = false;

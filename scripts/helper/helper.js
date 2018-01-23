@@ -14,6 +14,10 @@ var Color = {
 // intercept functions taken from - https://github.com/jakesgordon/javascript-breakout/blob/master/game.js
 var Game = {
 	Math: {
+		add: function(a, b){
+			return a + b;
+		},
+		
 		magnitude: function(x, y) {
   			return Math.sqrt(x*x + y*y);
 		},
