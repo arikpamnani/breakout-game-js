@@ -14,6 +14,13 @@ var Color = {
 // intercept functions taken from - https://github.com/jakesgordon/javascript-breakout/blob/master/game.js
 var Game = {
 	Math: {
+		maxa: function(array){
+			var maxm = array[0];
+			for(var i=1; i<array.length; i++)
+				maxm = Math.max(maxm, array[i]);
+			return maxm;
+		},
+
 		add: function(a, b){
 			return a + b;
 		},

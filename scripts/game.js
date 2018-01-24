@@ -1,12 +1,107 @@
 var canvas = document.querySelector("canvas");
 var cx = canvas.getContext("2d");
 
-var app = {lives: 100, score: 0, paused: false, gameOver: false, off: true};
+var app = {lives: 1000000000, score: 0, paused: false, gameOver: false, off: true};
+
+var env = {
+	// res -> resolution
+	get_xyz: function(res){
+		var xyz = new Array(ball.x, ball.y, sprite.x);
+		for(var i=0; i<xyz.length; i++){
+			xyz[i]=Math.floor(xyz[i]/res);
+		}
+
+		// return grid number 
+		return xyz;
+	}
+};
+
+// Simple Q learning algorithm
+var QAgent = function(){
+	// Q, actions, gamma, alpha
+	this.Q = null; 
+	this.actions = new Array(-1, 0, 1);
+	this.gamma = 0.95;
+	this.alpha = 0.5;
+
+	// previous state, action
+	this.p_state = null;
+	this.p_action = null;
+
+	// current state, action
+	this.c_state = null;
+	this.c_action = null;
+
+	// current reward
+	this.c_reward = 0;
+};
+
+QAgent.prototype = {
+	init: function(){
+		this.resolution = 15;
+		this.h = canvas.height/this.resolution;
+		this.w = canvas.width/this.resolution;
+		this.num_states = this.h * this.w;
+		
+		// initialize Q -> 3-d matrix 
+		this.Q = math.zeros([this.num_states, this.w, this.actions.length]);
+
+		// initialize current state
+		var xyz = env.get_xyz(this.resolution);
+		this.c_state = new Array(this.w*xyz[1]+xyz[0], xyz[2]);
+	},
+
+	chooseAction: function(){
+		// choose appropriate action
+		var choice = this.Q[this.c_state[0]][this.c_state[1]];
+		/*var max = choice.reduce(function(a, b){
+			return Math.max(a, b);
+		});*/
+		var max = Game.Math.maxa(choice);
+
+		// argmax
+		var argmax = new Array();
+		for(var i=0; i<choice.length; i++){
+			if(choice[i]==max)
+				// -1, 0, 1 actions
+				argmax.push(i-1);	
+		}
+
+		// update current action
+		this.c_action = argmax[Math.floor(Math.random() * argmax.length)];
+	},
+
+	updateQ: function(){		
+		// update previous state, action
+		this.p_state = this.c_state;
+
+		// update current state, action
+		var xyz = env.get_xyz(this.resolution);
+		this.c_state = new Array(this.w*xyz[1]+xyz[0], xyz[2]);
+
+		// update Q values
+		if(this.p_state != null){
+			// max(Q[s', a'])
+			var p_max = Game.Math.maxa(this.Q[this.c_state[0]][this.c_state[1]]);
+
+			// Q[s, a]
+			var val = this.Q[this.p_state[0]][this.p_state[1]][this.c_action+1];
+
+			// update
+			var update = this.alpha * (this.c_reward + this.gamma * (p_max) - val);  
+			this.Q[this.p_state[0]][this.p_state[1]][this.c_action+1] += update;
+		}
+	}
+};
+
+/* ----------------------------------------------------------------------------- */
 
 /*ball class*/
 function Ball(x, y){
 	this.x = x;
 	this.y = y;
+
+	this.hit_paddle = false;
 }
 
 Ball.prototype = {
@@ -25,7 +120,7 @@ Ball.prototype = {
 
 ball = new Ball(canvas.width/2, 3*canvas.height/4);
 ball.setRadius(7);
-ball.setSpeed(6, -6);
+ball.setSpeed(2, -2);
 ball.setColor("yellow");
 
 function drawBall(){
@@ -54,10 +149,22 @@ function moveBall(){
 	}
 	if(ball.y >= (canvas.height-ball.radius-sprite.height)){
 		// lower wall
-		if((ball.x >= (sprite.x - sprite.width/2)) && (ball.x <= (sprite.x + sprite.width/2)))
+		if((ball.x >= (sprite.x - sprite.width/2)) && (ball.x <= (sprite.x + sprite.width/2))){
+			// reward +1
+			qagent.c_reward = 10;
+
+			// hit paddle? 
+			ball.hit_paddle = true;
+
 			ball.speed.y *= -1;
+		}
 		else{
-			/* :( */
+			// hit paddle?
+			ball.hit_paddle = false;
+
+			// reward -100
+			qagent.c_reward = -100;
+
 			app.lives -= 1;
 			if(app.lives <= 0){
 				app.gameOver = true;
@@ -104,17 +211,18 @@ function drawSprite(){
 var right = false;
 var left = false; 
 
-function moveSprite(){
+/*function moveSprite(){
 	if(right && (sprite.x + sprite.width/2) < canvas.width){
 		sprite.x += sprite.speed.x;
 	}
 	if(left && (sprite.x > sprite.width/2)){
 		sprite.x -= sprite.speed.x;
 	}
-}
+}*/
 
 function amoveSprite(){
-	var action = [-1, 0, 1][Math.floor(Math.random() * 3)];
+	/*var action = [-1, 0, 1][Math.floor(Math.random() * 3)];*/
+	var action = qagent.c_action;
 	if(action===-1 && (sprite.x > sprite.width/2)){
 		sprite.x -= sprite.speed.x;
 	}
@@ -131,14 +239,19 @@ function play(){
 	drawSprite();
 	drawBars();
 
+
+	// move
+	qagent.chooseAction(); 
+	amoveSprite();
+
 	// detect
-	// detectCollision();
 	updateCollision(null);
 
 	// move
 	moveBall();
-	// moveSprite();
-	amoveSprite();
+
+	// update Q
+	qagent.updateQ();
 
 	// score & lives
 	dispScore();
@@ -148,7 +261,7 @@ function play(){
 var timer;
 
 function autoPlay(){
-	timer = setInterval(play, 12);
+	timer = setInterval(play, 8);
 }
 
 function restart(wait = false){
@@ -159,8 +272,8 @@ function restart(wait = false){
 	ball.y = 3*canvas.height/4;
 
 	/*reinitialize sprite*/
-	sprite.x = canvas.width/2; 
-	sprite.y = canvas.height-sprite.height/2;
+	// sprite.x = canvas.width/2; 
+	// sprite.y = canvas.height-sprite.height/2;
 
 	if(app.gameOver){
 		/*reinitialize app*/
@@ -178,8 +291,10 @@ function restart(wait = false){
 	// go to initial state
 	if(wait)
 		ball.setSpeed(0, 0);
-	else
-		ball.setSpeed(6, -6);
+	else{
+		var x_dir = [-1, 1][Math.floor(Math.random()*2)];
+		ball.setSpeed(x_dir*2, -2);
+	}
 
 	autoPlay();
 }
@@ -220,7 +335,7 @@ function drawBars(){
 	});
 }
 
-function detectCollision(){
+/*function detectCollision(){
 	for(var i=0; i<allBars.length; i++){
 		var a = ball.x >= allBars[i].x;
 		var b = ball.y >= allBars[i].y;
@@ -237,7 +352,7 @@ function detectCollision(){
 		}
 	}
 }
-
+*/
 function updateCollision(dt){
 	var distCurrent, distClosest = Infinity, point, closest = null;
 
@@ -260,6 +375,10 @@ function updateCollision(dt){
 	});
 
 	if(closest){
+		// reward +1
+		if(ball.hit_paddle)
+			qagent.c_reward = 10;
+
 		// updating score
 		app.score += 1;
 		
@@ -326,6 +445,10 @@ function dispLives(){
 	document.querySelector("input.lives").value = app.lives;
 }
 
+// initialize agent
+var qagent = new QAgent();
+qagent.init();
+
 // initialize
 play();
 
@@ -355,4 +478,5 @@ addEventListener("keydown", function(event){
 	}
 	// console.log(event.keyCode);
 });
+
 
