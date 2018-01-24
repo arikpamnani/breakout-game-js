@@ -21,7 +21,7 @@ var QAgent = function(){
 	// Q, actions, gamma, alpha
 	this.Q = null; 
 	this.actions = new Array(-1, 0, 1);
-	this.gamma = 0.95;
+	this.gamma = 0.99;
 	this.alpha = 0.5;
 
 	// previous state, action
@@ -38,7 +38,7 @@ var QAgent = function(){
 
 QAgent.prototype = {
 	init: function(){
-		this.resolution = 15;
+		this.resolution = 10;
 		this.h = canvas.height/this.resolution;
 		this.w = canvas.width/this.resolution;
 		this.num_states = this.h * this.w;
@@ -88,7 +88,8 @@ QAgent.prototype = {
 			var val = this.Q[this.p_state[0]][this.p_state[1]][this.c_action+1];
 
 			// update
-			var update = this.alpha * (this.c_reward + this.gamma * (p_max) - val);  
+			// var update = this.alpha * (this.c_reward + this.gamma * (p_max) - val);
+			var update = this.c_reward + this.gamma * p_max;  
 			this.Q[this.p_state[0]][this.p_state[1]][this.c_action+1] += update;
 		}
 	}
@@ -199,7 +200,7 @@ Sprite.prototype = {
 } 
 
 sprite = new Sprite(100, 10, canvas.width/2, canvas.height-15/2);
-sprite.setSpeed(6, 2);
+sprite.setSpeed(8, 2);
 
 function drawSprite(){
 	cx.beginPath();
@@ -211,14 +212,14 @@ function drawSprite(){
 var right = false;
 var left = false; 
 
-/*function moveSprite(){
+function moveSprite(){
 	if(right && (sprite.x + sprite.width/2) < canvas.width){
 		sprite.x += sprite.speed.x;
 	}
 	if(left && (sprite.x > sprite.width/2)){
 		sprite.x -= sprite.speed.x;
 	}
-}*/
+}
 
 function amoveSprite(){
 	/*var action = [-1, 0, 1][Math.floor(Math.random() * 3)];*/
@@ -243,6 +244,7 @@ function play(){
 	// move
 	qagent.chooseAction(); 
 	amoveSprite();
+	// moveSprite();
 
 	// detect
 	updateCollision(null);
@@ -261,7 +263,7 @@ function play(){
 var timer;
 
 function autoPlay(){
-	timer = setInterval(play, 8);
+	timer = setInterval(play, 6);
 }
 
 function restart(wait = false){
@@ -321,7 +323,7 @@ function initializeBars(horizontalNum, verticalNum){
 	return allBars;
 }
 
-var allBars = initializeBars(17, 6);
+var allBars = initializeBars(30, 15);
 
 function drawBars(){
 	allBars.forEach(function(bar){
